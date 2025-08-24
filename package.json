@@ -1,0 +1,28 @@
+{
+  "name": "tradelink-intercom",
+  "version": "1.0.0",
+  "description": "A PWA for voice communication over local network like an intercom",
+  "main": "index.js",
+  "scripts": {
+    "dev": "bun run --hot src/server.js",
+    "build": "bun run build:client && bun run build:server",
+    "build:client": "bun run build:html && bun run build:css && bun run build:js",
+    "build:html": "cp src/index.html dist/",
+    "build:css": "cp src/styles.css dist/",
+    "build:js": "cp src/app.js dist/ && cp src/service-worker.js dist/",
+    "build:server": "cp src/server.js dist/",
+    "start": "bun run dist/server.js",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  },
+  "keywords": ["pwa", "voice", "communication", "intercom", "webrtc"],
+  "author": "Tradelink",
+  "license": "MIT"
+}

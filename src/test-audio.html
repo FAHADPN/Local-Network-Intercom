@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Test - Tradelink Intercom</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .volume-meter {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .volume-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            width: 0%;
+            transition: width 0.1s ease;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Audio Test - Tradelink Intercom</h1>
+    
+    <div class="test-section">
+        <h2>Audio Context Test</h2>
+        <button id="initAudio">Initialize Audio Context</button>
+        <div id="audioContextStatus" class="status">Click "Initialize Audio Context" to begin</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Microphone Input Test</h2>
+        <button id="testMic">Test Microphone</button>
+        <button id="stopMic" disabled>Stop Microphone</button>
+        <div id="micStatus" class="status">Click "Test Microphone" to begin</div>
+        <div class="volume-meter">
+            <div id="micVolumeBar" class="volume-bar"></div>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Speaker Output Test</h2>
+        <button id="testSpeaker">Test Speaker (440Hz)</button>
+        <button id="testSpeaker2">Test Speaker (880Hz)</button>
+        <div id="speakerStatus" class="status">Click a test button to verify speaker output</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Device Information</h2>
+        <button id="listDevices">List Audio Devices</button>
+        <div id="deviceInfo" class="status">Click "List Audio Devices" to see available devices</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Log</h2>
+        <div id="log" class="log"></div>
+        <button id="clearLog">Clear Log</button>
+    </div>
+
+    <script>
+        let audioContext = null;
+        let microphone = null;
+        let analyser = null;
+        let animationId = null;
+        let localStream = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(elementId, message, className) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${className}`;
+        }
+
+        // Initialize Audio Context
+        async function initializeAudioContext() {
+            try {
+                log('Initializing audio context...');
+                updateStatus('audioContextStatus', 'Initializing...', 'warning');
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                if (audioContext.state === 'suspended') {
+                    await audioContext.resume();
+                }
+                
+                updateStatus('audioContextStatus', `✅ Audio Context initialized - State: ${audioContext.state}, Sample Rate: ${audioContext.sampleRate}Hz`, 'success');
+                log(`Audio context initialized successfully - State: ${audioContext.state}, Sample Rate: ${audioContext.sampleRate}Hz`);
+                
+            } catch (error) {
+                log(`Audio context initialization failed: ${error.message}`, 'error');
+                updateStatus('audioContextStatus', `❌ Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Test Microphone
+        async function testMicrophone() {
+            try {
+                if (!audioContext) {
+                    alert('Please initialize audio context first');
+                    return;
+                }
+                
+                log('Testing microphone...');
+                updateStatus('micStatus', 'Requesting microphone access...', 'warning');
+                
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        sampleRate: 48000
+                    }
+                });
+                
+                // Create audio nodes
+                microphone = audioContext.createMediaStreamSource(localStream);
+                analyser = audioContext.createAnalyser();
+                
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                
+                updateStatus('micStatus', '✅ Microphone active - Speak to see volume meter', 'success');
+                document.getElementById('stopMic').disabled = false;
+                document.getElementById('testMic').disabled = true;
+                
+                startVolumeMeter();
+                log('Microphone test started successfully');
+                
+            } catch (error) {
+                log(`Microphone test failed: ${error.message}`, 'error');
+                updateStatus('micStatus', `❌ Failed: ${error.message}`, 'error');
+            }
+        }
+
+        function startVolumeMeter() {
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            function animate() {
+                animationId = requestAnimationFrame(animate);
+                analyser.getByteFrequencyData(dataArray);
+                
+                // Calculate average volume
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    sum += dataArray[i];
+                }
+                const average = sum / bufferLength;
+                
+                // Update volume meter
+                const volumeBar = document.getElementById('micVolumeBar');
+                volumeBar.style.width = `${average}%`;
+            }
+            
+            animate();
+        }
+
+        function stopMicrophone() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            updateStatus('micStatus', 'Microphone test stopped', 'warning');
+            document.getElementById('stopMic').disabled = true;
+            document.getElementById('testMic').disabled = false;
+            
+            const volumeBar = document.getElementById('micVolumeBar');
+            volumeBar.style.width = '0%';
+            
+            log('Microphone test stopped');
+        }
+
+        // Test Speaker Output
+        function testSpeaker(frequency = 440) {
+            try {
+                if (!audioContext) {
+                    alert('Please initialize audio context first');
+                    return;
+                }
+                
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+                
+                log(`Testing speaker output at ${frequency}Hz...`);
+                updateStatus('speakerStatus', `Playing ${frequency}Hz tone...`, 'warning');
+                
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 1);
+                
+                updateStatus('speakerStatus', `✅ ${frequency}Hz tone played successfully`, 'success');
+                log(`Speaker test completed at ${frequency}Hz`);
+                
+                setTimeout(() => {
+                    updateStatus('speakerStatus', 'Click a test button to verify speaker output', '');
+                }, 2000);
+                
+            } catch (error) {
+                log(`Speaker test failed: ${error.message}`, 'error');
+                updateStatus('speakerStatus', `❌ Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // List Audio Devices
+        async function listAudioDevices() {
+            try {
+                log('Enumerating audio devices...');
+                updateStatus('deviceInfo', 'Enumerating devices...', 'warning');
+                
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                const audioOutputs = devices.filter(device => device.kind === 'audiooutput');
+                
+                let deviceList = `Audio Input Devices: ${audioInputs.length}\n`;
+                audioInputs.forEach((device, index) => {
+                    deviceList += `  ${index + 1}. ${device.label || 'Unknown Device'} (${device.deviceId})\n`;
+                });
+                
+                deviceList += `\nAudio Output Devices: ${audioOutputs.length}\n`;
+                audioOutputs.forEach((device, index) => {
+                    deviceList += `  ${index + 1}. ${device.label || 'Unknown Device'} (${device.deviceId})\n`;
+                });
+                
+                updateStatus('deviceInfo', `✅ Found ${audioInputs.length} input and ${audioOutputs.length} output devices`, 'success');
+                log(deviceList);
+                
+            } catch (error) {
+                log(`Device enumeration failed: ${error.message}`, 'error');
+                updateStatus('deviceInfo', `❌ Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('initAudio').addEventListener('click', initializeAudioContext);
+        document.getElementById('testMic').addEventListener('click', testMicrophone);
+        document.getElementById('stopMic').addEventListener('click', stopMicrophone);
+        document.getElementById('testSpeaker').addEventListener('click', () => testSpeaker(440));
+        document.getElementById('testSpeaker2').addEventListener('click', () => testSpeaker(880));
+        document.getElementById('listDevices').addEventListener('click', listAudioDevices);
+        document.getElementById('clearLog').addEventListener('click', () => {
+            document.getElementById('log').innerHTML = '';
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            log('Audio test page loaded');
+            log(`Browser: ${navigator.userAgent}`);
+            log(`Protocol: ${window.location.protocol}`);
+            log(`Host: ${window.location.host}`);
+        });
+    </script>
+</body>
+</html>

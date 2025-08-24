@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microphone Test - Tradelink Intercom</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.warning { background: #fff3cd; color: #856404; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        button:disabled { background: #6c757d; cursor: not-allowed; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎤 Microphone Test - Tradelink Intercom</h1>
+    
+    <div class="test-section">
+        <h2>Browser Information</h2>
+        <div id="browserInfo"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Microphone Test</h2>
+        <button id="testMic">Test Microphone Access</button>
+        <button id="stopTest" disabled>Stop Test</button>
+        <div id="micStatus" class="status">Click "Test Microphone Access" to begin</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>WebRTC Test</h2>
+        <button id="testWebRTC">Test WebRTC</button>
+        <div id="webrtcStatus" class="status">Click "Test WebRTC" to begin</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Console Log</h2>
+        <div id="log" class="log"></div>
+        <button id="clearLog">Clear Log</button>
+    </div>
+
+    <script>
+        let localStream = null;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let animationId = null;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            logDiv.appendChild(logEntry);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(elementId, message, className) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status ${className}`;
+        }
+
+        // Browser Information
+        function showBrowserInfo() {
+            const browserInfo = document.getElementById('browserInfo');
+            const info = [
+                `User Agent: ${navigator.userAgent}`,
+                `Protocol: ${window.location.protocol}`,
+                `Host: ${window.location.host}`,
+                `WebRTC Support: ${!!window.RTCPeerConnection ? '✅ Yes' : '❌ No'}`,
+                `MediaDevices Support: ${!!navigator.mediaDevices ? '✅ Yes' : '❌ No'}`,
+                `getUserMedia Support: ${getUserMediaFunction() ? '✅ Yes' : '❌ No'}`,
+                `HTTPS Required: ${window.location.protocol === 'https:' ? '✅ No' : '⚠️ Yes (for production)'}`
+            ];
+            
+            browserInfo.innerHTML = info.map(line => `<p>${line}</p>`).join('');
+        }
+
+        function getUserMediaFunction() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                return navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+            }
+            if (navigator.getUserMedia) {
+                return navigator.getUserMedia.bind(navigator);
+            }
+            if (navigator.webkitGetUserMedia) {
+                return navigator.webkitGetUserMedia.bind(navigator);
+            }
+            if (navigator.mozGetUserMedia) {
+                return navigator.mozGetUserMedia.bind(navigator);
+            }
+            if (navigator.msGetUserMedia) {
+                return navigator.msGetUserMedia.bind(navigator);
+            }
+            return null;
+        }
+
+        // Microphone Test
+        async function testMicrophone() {
+            try {
+                log('Starting microphone test...');
+                updateStatus('micStatus', 'Requesting microphone access...', 'warning');
+                
+                const getUserMedia = getUserMediaFunction();
+                if (!getUserMedia) {
+                    throw new Error('getUserMedia not supported in this browser');
+                }
+                
+                localStream = await getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
+                
+                log('Microphone access granted successfully!');
+                updateStatus('micStatus', '✅ Microphone access granted!', 'success');
+                
+                // Enable stop button
+                document.getElementById('stopTest').disabled = false;
+                document.getElementById('testMic').disabled = true;
+                
+                // Start audio visualization
+                startAudioVisualization();
+                
+            } catch (error) {
+                log(`Microphone test failed: ${error.message}`, 'error');
+                updateStatus('micStatus', `❌ Failed: ${error.message}`, 'error');
+                
+                if (error.name === 'NotAllowedError') {
+                    log('User denied microphone access. Please allow access and try again.');
+                } else if (error.name === 'NotFoundError') {
+                    log('No microphone found. Please connect a microphone and try again.');
+                } else if (error.name === 'NotSupportedError') {
+                    log('Audio capture not supported. Try using HTTPS or a different browser.');
+                }
+            }
+        }
+
+        function startAudioVisualization() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(localStream);
+                
+                microphone.connect(analyser);
+                analyser.fftSize = 256;
+                
+                const bufferLength = analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                function animate() {
+                    animationId = requestAnimationFrame(animate);
+                    analyser.getByteFrequencyData(dataArray);
+                    
+                    // Calculate average volume
+                    let sum = 0;
+                    for (let i = 0; i < bufferLength; i++) {
+                        sum += dataArray[i];
+                    }
+                    const average = sum / bufferLength;
+                    
+                    // Update status with volume indicator
+                    const volumeBar = '█'.repeat(Math.floor(average / 10));
+                    updateStatus('micStatus', `✅ Microphone active - Volume: ${volumeBar}`, 'success');
+                }
+                
+                animate();
+                log('Audio visualization started');
+                
+            } catch (error) {
+                log(`Audio visualization failed: ${error.message}`, 'error');
+            }
+        }
+
+        function stopMicrophoneTest() {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                localStream = null;
+            }
+            
+            if (audioContext) {
+                audioContext.close();
+                audioContext = null;
+            }
+            
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            updateStatus('micStatus', 'Microphone test stopped', 'warning');
+            document.getElementById('stopTest').disabled = true;
+            document.getElementById('testMic').disabled = false;
+            log('Microphone test stopped');
+        }
+
+        // WebRTC Test
+        async function testWebRTC() {
+            try {
+                log('Starting WebRTC test...');
+                updateStatus('webrtcStatus', 'Testing WebRTC...', 'warning');
+                
+                if (!window.RTCPeerConnection) {
+                    throw new Error('RTCPeerConnection not supported');
+                }
+                
+                const pc = new RTCPeerConnection({
+                    iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+                });
+                
+                log('RTCPeerConnection created successfully');
+                
+                // Test data channel
+                const dataChannel = pc.createDataChannel('test');
+                dataChannel.onopen = () => {
+                    log('Data channel opened successfully');
+                    dataChannel.send('Hello WebRTC!');
+                };
+                
+                dataChannel.onmessage = (event) => {
+                    log(`Data channel message received: ${event.data}`);
+                };
+                
+                // Test offer creation
+                const offer = await pc.createOffer();
+                log('Offer created successfully');
+                
+                await pc.setLocalDescription(offer);
+                log('Local description set successfully');
+                
+                updateStatus('webrtcStatus', '✅ WebRTC test passed!', 'success');
+                log('WebRTC test completed successfully');
+                
+                // Cleanup
+                pc.close();
+                
+            } catch (error) {
+                log(`WebRTC test failed: ${error.message}`, 'error');
+                updateStatus('webrtcStatus', `❌ Failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('testMic').addEventListener('click', testMicrophone);
+        document.getElementById('stopTest').addEventListener('click', stopMicrophoneTest);
+        document.getElementById('testWebRTC').addEventListener('click', testWebRTC);
+        document.getElementById('clearLog').addEventListener('click', () => {
+            document.getElementById('log').innerHTML = '';
+        });
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showBrowserInfo();
+            log('Microphone test page loaded');
+        });
+    </script>
+</body>
+</html>

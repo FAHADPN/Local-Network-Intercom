@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tradelink Intercom</title>
+    <meta name="description" content="Voice communication over local network like an intercom">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Tradelink Intercom">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzI1NjNlYiIvPgo8cGF0aCBkPSJNMTYgOEwxOCA5LjVWMTQuNUwxNiAxNkwxNCAxNC41VjkuNUwxNiA4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDEyTDEyIDEzLjVWMTguNUwxMCAyMEw4IDE4LjVWMTMuNUwxMCAxMloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yMiAxMkwyNCAxMy41VjE4LjVMMjIgMjBMMjAgMTguNVYxMy41TDIyIDEyWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTE2IDI0TDE4IDI1LjVWMzAuNUwxNiAzMkwxNCAzMC41VjI1LjVMMTYgMjRaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K">
+    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDUiIGZpbGw9IiMyNTYzZWIiLz4KPHBhdGggZD0iTTkwIDQ1TDEwMS41IDUzLjc1VjgxLjc1TDkwIDkwTDc4LjUgODEuNzVWNTMuNzVMOTAgNDVaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNNTYuMjUgNjcuNUw2Ny43NSA3Ni4yNVYxMDQuMjVMNTYuMjUgMTEyLjVMNDQuNzUgMTA0LjI1Vjc2LjI1TDU2LjI1IDY3LjVaIiBmaWxsPSJ3aGl0ZSIvPgo8cGF0aCBkPSJNMTIzLjc1IDY3LjVMMTM1LjI1IDc2LjI1VjEwNC4yNUwxMjMuNzUgMTEyLjVMMTEyLjI1IDEwNC4yNVY3Ni4yNUwxMjMuNzUgNjcuNVoiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik05MCAxMzVMMTAxLjUgMTQzLjc1VjE3MS43NUw5MCAxODBMNzguNSAxNzEuNzVWMTQzLjc1TDkwIDEzNVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPgo=">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-left">
+                <h1>🎤 Tradelink Intercom</h1>
+                <div class="device-display">
+                    <span class="device-label">Device:</span>
+                    <span class="device-name" id="currentDeviceName">Loading...</span>
+                </div>
+            </div>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Disconnected</span>
+            </div>
+        </header>
+
+        <main class="main">
+            <div class="network-section">
+                <h2>Network Discovery</h2>
+                <div class="device-identity">
+                    <label for="deviceName">Device Name:</label>
+                    <input type="text" id="deviceName" placeholder="Enter your device name" maxlength="30">
+                    <button id="saveDeviceName" class="btn btn-primary">Save Name</button>
+                </div>
+                <div class="device-info">
+                    <div class="info-item">
+                        <span class="info-label">Platform:</span>
+                        <span class="info-value" id="devicePlatform">Detecting...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Browser:</span>
+                        <span class="info-value" id="deviceBrowser">Detecting...</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">User Agent:</span>
+                        <span class="info-value" id="deviceUserAgent">Detecting...</span>
+                    </div>
+                </div>
+                <div class="network-info">
+                    <p>Your IP: <span id="localIP">Detecting...</span></p>
+                    <p>Network: <span id="networkInfo">Detecting...</span></p>
+                </div>
+                <div class="discovery-controls">
+                    <button id="startDiscovery" class="btn btn-primary">Start Discovery</button>
+                    <button id="stopDiscovery" class="btn btn-secondary" disabled>Stop Discovery</button>
+                </div>
+            </div>
+
+            <div class="peers-section">
+                <h2>Available Peers</h2>
+                <div class="peers-list" id="peersList">
+                    <p class="no-peers">No peers discovered yet. Start discovery to find other computers.</p>
+                </div>
+            </div>
+
+            <div class="communication-section">
+                <h2>Voice Communication</h2>
+                <div class="call-controls">
+                    <button id="startCall" class="btn btn-success" disabled>Start Call</button>
+                    <button id="endCall" class="btn btn-danger" disabled>End Call</button>
+                </div>
+                <div class="audio-status">
+                    <div class="audio-indicator">
+                        <span class="mic-icon">🎤</span>
+                        <span class="mic-status" id="micStatus">Microphone: Not connected</span>
+                    </div>
+                    <div class="volume-control">
+                        <label for="volumeSlider">Speaker Volume:</label>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="50">
+                        <button id="testAudio" class="btn btn-info">Test Audio</button>
+                        <button id="diagnoseAudio" class="btn btn-warning">Diagnose</button>
+                        <button id="debugConnections" class="btn btn-secondary">Debug Connections</button>
+                    </div>
+                    <div class="audio-troubleshooting">
+                        <details>
+                            <summary>Audio Troubleshooting</summary>
+                            <ul>
+                                <li>Make sure your speakers/headphones are connected and not muted</li>
+                                <li>Check your system volume settings</li>
+                                <li>Try refreshing the page if audio doesn't work</li>
+                                <li>Use the "Test Audio" button to verify speaker output</li>
+                                <li>Check browser console for error messages</li>
+                            </ul>
+                        </details>
+                    </div>
+                </div>
+                <div class="browser-info" id="browserInfo" style="display: none;">
+                    <div class="info-box">
+                        <h4>Browser Compatibility</h4>
+                        <p id="browserStatus">Checking browser compatibility...</p>
+                        <div class="compatibility-tips">
+                            <p><strong>For best experience:</strong></p>
+                            <ul>
+                                <li>Use Chrome, Firefox, Edge, or Safari</li>
+                                <li>Allow microphone access when prompted</li>
+                                <li>Use HTTPS in production (localhost works for development)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="call-status" id="callStatus" style="display: none;">
+                <div class="call-info">
+                    <h3>Active Call</h3>
+                    <p>Connected to: <span id="connectedPeer">Unknown</span></p>
+                    <div class="call-timer" id="callTimer">00:00</div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>Local Network Voice Communication</p>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="app.js"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(registration => {
+                    console.log('Service Worker registered successfully:', registration);
+                })
+                .catch(error => {
+                    console.log('Service Worker registration failed:', error);
+                });
+        }
+    </script>
+</body>
+</html>
