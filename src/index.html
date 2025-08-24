@@ -2,15 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tradelink Intercom</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <meta name="description" content="Voice communication over local network like an intercom">
+    <meta name="keywords" content="intercom, voice, communication, local network, WebRTC">
+    <meta name="author" content="Tradelink">
+    <meta name="robots" content="index, follow">
     
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#2563eb">
+    <!-- Mobile optimizations -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Tradelink Intercom">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2563eb">
+    <meta name="msapplication-TileColor" content="#2563eb">
+    <meta name="msapplication-config" content="none">
     
     <!-- PWA Icons -->
     <link rel="icon" type="image/png" sizes="32x32" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iOCIgZmlsbD0iIzI1NjNlYiIvPgo8cGF0aCBkPSJNMTYgOEwxOCA5LjVWMTQuNUwxNiAxNkwxNCAxNC41VjkuNUwxNiA4WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEwIDEyTDEyIDEzLjVWMTguNUwxMCAyMEw4IDE4LjVWMTMuNUwxMCAxMloiIGZpbGw9IndoaXRlIi8+CjxwYXRoIGQ9Ik0yMiAxMkwyNCAxMy41VjE4LjVMMjIgMjBMMjAgMTguNVYxMy41TDIyIDEyWiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTE2IDI0TDE4IDI1LjVWMzAuNUwxNiAzMkwxNCAzMC41VjI1LjVMMTYgMjRaIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K">
@@ -21,6 +29,12 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="app.js" as="script">
+    <link rel="preload" href="/socket.io/socket.io.js" as="script">
+    
+    <title>Tradelink Intercom</title>
 </head>
 <body>
     <div class="app">

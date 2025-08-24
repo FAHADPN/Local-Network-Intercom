@@ -2,50 +2,259 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
     <title>Microphone Test - Tradelink Intercom</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background: #f5f5f5;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            line-height: 1.6;
         }
+        
+        h1 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
         .test-section {
-            background: white;
-            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: clamp(15px, 4vw, 25px);
             margin: 20px 0;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
+        
+        h2 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: clamp(1.125rem, 3.5vw, 1.25rem);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
         .status {
-            padding: 10px;
-            border-radius: 4px;
-            margin: 10px 0;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
         }
-        .status.success { background: #d4edda; color: #155724; }
-        .status.error { background: #f8d7da; color: #721c24; }
-        .status.warning { background: #fff3cd; color: #856404; }
+        
+        .status.success { 
+            background: #d1fae5; 
+            color: #065f46; 
+            border: 1px solid #a7f3d0;
+        }
+        
+        .status.error { 
+            background: #fee2e2; 
+            color: #991b1b; 
+            border: 1px solid #fecaca;
+        }
+        
+        .status.warning { 
+            background: #fef3c7; 
+            color: #92400e; 
+            border: 1px solid #fde68a;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 15px 0;
+        }
+        
         button {
-            background: #007bff;
+            background: #2563eb;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
+            padding: clamp(10px, 3vw, 15px) clamp(15px, 4vw, 25px);
+            border-radius: 8px;
             cursor: pointer;
-            margin: 5px;
+            margin: 5px 0;
+            font-weight: 600;
+            font-size: clamp(0.875rem, 2.5vw, 1rem);
+            transition: all 0.2s ease;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+            flex: 1;
+            min-width: 120px;
         }
-        button:hover { background: #0056b3; }
-        button:disabled { background: #6c757d; cursor: not-allowed; }
+        
+        button:hover { 
+            background: #1d4ed8; 
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        button:disabled { 
+            background: #6c757d; 
+            cursor: not-allowed; 
+            transform: none;
+        }
+        
         .log {
             background: #f8f9fa;
             border: 1px solid #dee2e6;
-            padding: 10px;
-            border-radius: 4px;
-            font-family: monospace;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
             max-height: 300px;
             overflow-y: auto;
+            font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+            line-height: 1.5;
+        }
+        
+        #browserInfo {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+            line-height: 1.6;
+        }
+        
+        #browserInfo p {
+            margin-bottom: 8px;
+        }
+        
+        #browserInfo strong {
+            color: #1e293b;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .test-section {
+                padding: 20px;
+                margin: 15px 0;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            h1 {
+                margin-bottom: 20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .test-section {
+                padding: 15px;
+                margin: 10px 0;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+                margin-bottom: 15px;
+            }
+            
+            h2 {
+                font-size: 1.125rem;
+            }
+            
+            .status {
+                padding: 10px;
+                font-size: 0.875rem;
+            }
+            
+            .log {
+                font-size: 0.75rem;
+                padding: 10px;
+            }
+            
+            #browserInfo {
+                font-size: 0.75rem;
+                padding: 10px;
+            }
+        }
+        
+        /* Touch device optimizations */
+        @media (hover: none) and (pointer: coarse) {
+            button {
+                min-height: 48px;
+                padding: 15px 20px;
+            }
+            
+            button:hover {
+                transform: none;
+            }
+            
+            button:active {
+                transform: scale(0.98);
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            }
+            
+            .test-section {
+                background: rgba(30, 41, 59, 0.95);
+                color: #f1f5f9;
+            }
+            
+            h2 {
+                color: #f1f5f9;
+            }
+            
+            .log,
+            #browserInfo {
+                background: #334155;
+                border-color: #475569;
+                color: #f1f5f9;
+            }
+            
+            #browserInfo strong {
+                color: #f1f5f9;
+            }
+        }
+        
+        /* Reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            button {
+                transition: none;
+            }
+            
+            button:hover {
+                transform: none;
+            }
         }
     </style>
 </head>
@@ -59,21 +268,27 @@
     
     <div class="test-section">
         <h2>Microphone Test</h2>
-        <button id="testMic">Test Microphone Access</button>
-        <button id="stopTest" disabled>Stop Test</button>
+        <div class="button-group">
+            <button id="testMic">Test Microphone Access</button>
+            <button id="stopTest" disabled>Stop Test</button>
+        </div>
         <div id="micStatus" class="status">Click "Test Microphone Access" to begin</div>
     </div>
     
     <div class="test-section">
         <h2>WebRTC Test</h2>
-        <button id="testWebRTC">Test WebRTC</button>
+        <div class="button-group">
+            <button id="testWebRTC">Test WebRTC</button>
+        </div>
         <div id="webrtcStatus" class="status">Click "Test WebRTC" to begin</div>
     </div>
     
     <div class="test-section">
         <h2>Console Log</h2>
         <div id="log" class="log"></div>
-        <button id="clearLog">Clear Log</button>
+        <div class="button-group">
+            <button id="clearLog">Clear Log</button>
+        </div>
     </div>
 
     <script>
